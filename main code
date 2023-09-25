@@ -1,0 +1,89 @@
+# import pandas library
+import pandas as pd
+  
+# Get the data
+column_names = ['user_id', 'item_id', 'rating', 'time']
+  
+path = r"C:\Users\HP\file.tsv"
+
+# df -> Dataframe 
+df = pd.read_csv(path, sep='\t', names=column_names)
+
+# Check the head of the data
+df.head()
+
+# Check out all the movies and their respective IDs
+movie_titles = pd.read_csv(r"C:\Users\HP\Movie_Name.csv")
+movie_titles.head()
+
+# Merge the files items
+data = pd.merge(df, movie_titles, on='item_id')
+data.head()
+
+# Calculate average rating of all movies
+data.groupby('title')['rating'].mean().sort_values(ascending=False).head()
+
+# Calculate count rating of all movies
+data.groupby('title')['rating'].count().sort_values(ascending=False).head()
+
+# creating dataframe with 'rating' count values
+ratings = pd.DataFrame(data.groupby('title')['rating'].mean()) 
+  
+ratings['num of ratings'] = pd.DataFrame(data.groupby('title')['rating'].count())
+  
+ratings.head()
+
+# import matplotlib and seaborn libraries
+import matplotlib.pyplot as plt
+import seaborn as sns
+  
+sns.set_style('white')
+%matplotlib inline
+
+# plot graph of 'number of ratings column'
+plt.figure(figsize =(10, 3))
+  
+ratings['num of ratings'].hist(bins = 60)
+
+# plot graph of 'ratings' column
+plt.figure(figsize =(9, 3))
+  
+ratings['rating'].hist(bins = 50)
+
+# Sorting values according to the 'number of rating column'
+moviemat = data.pivot_table(index ='user_id',
+              columns ='title', values ='rating')
+  
+moviemat.head()
+  
+ratings.sort_values('num of ratings', ascending = False).head(10)
+
+# analysing correlation with similar movies
+areyouthere_user_ratings = moviemat['Are you there god? (2023)']
+StrangeThingsHappend_user_ratings = moviemat['Strange things happend (2006)']
+  
+areyouthere_user_ratings.head()
+
+# analysing correlation with similar movies
+similar_to_areyouthere = moviemat.corrwith(areyouthere_user_ratings)
+similar_to_StrangeThingsHappend = moviemat.corrwith(StrangeThingsHappend_user_ratings)
+  
+corr_areyouthere = pd.DataFrame(similar_to_areyouthere, columns =['Correlation'])
+corr_areyouthere.dropna(inplace = True)
+  
+corr_areyouthere.head()
+
+# Similar movies like starwars
+corr_areyouthere.sort_values('Correlation', ascending = False).head(10)
+corr_areyouthere = corr_areyouthere.join(ratings['num of ratings'])
+  
+corr_areyouthere.head()
+  
+corr_areyouthere[corr_areyouthere['num of ratings']>100].sort_values('Correlation', ascending = False).head()
+
+# Similar movies as of liarliar
+corr_StrangeThingsHappend = pd.DataFrame(similar_to_StrangeThingsHappend, columns =['Correlation'])
+corr_StrangeThingsHappend.dropna(inplace = True)
+  
+corr_StrangeThingsHappend = corr_StrangeThingsHappend.join(ratings['num of ratings'])
+corr_StrangeThingsHappend[corr_StrangeThingsHappend['num of ratings']>100].sort_values('Correlation', ascending = False).head()
